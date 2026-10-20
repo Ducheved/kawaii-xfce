@@ -1,0 +1,19 @@
+[Configuration]
+FontName=FiraCode Nerd Font 12
+MiscMenubarDefault=FALSE
+ScrollingBar=TERMINAL_SCROLLBAR_NONE
+CursorShape=TERMINAL_CURSOR_SHAPE_IBEAM
+BackgroundMode=TERMINAL_BACKGROUND_SOLID
+BackgroundDarkness=0.880000
+ColorForeground=#f5ecff
+ColorBackground=#170f24
+ColorCursor=#ff79c6
+ColorPalette=#2b1b3d;#ff5c8a;#7dffb2;#ffe08a;#b388ff;#ff79c6;#8be9fd;#f1e8ff;#4a3566;#ff80a8;#9dffc6;#fff0b0;#c9a8ff;#ff9ad5;#a4f0ff;#ffffff
+ColorSelection=#ff79c6
+ColorSelectionBackground=#5a2a5e
+ColorSelectionUseDefault=FALSE
+ColorBold=#ff9ad5
+ColorBoldUseDefault=FALSE
+ColorCursorUseDefault=FALSE
+MiscCursorBlinks=TRUE
+MiscBordersDefault=TRUE

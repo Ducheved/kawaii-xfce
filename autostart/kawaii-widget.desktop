@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Kawaii widget
+Comment=Котик-виджет с часами и состоянием компьютера
+Exec=@BIN@/kawaii-widget.py
+OnlyShowIn=XFCE;

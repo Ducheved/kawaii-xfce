@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=VNC (LAN)
+Comment=VNC только для домашней сети
+Exec=@BIN@/kawaii-vnc.sh
+OnlyShowIn=XFCE;

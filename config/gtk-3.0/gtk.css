@@ -1,0 +1,59 @@
+/* Kawaii panel: more air in the task list buttons */
+#tasklist-24 button {
+  padding: 0 14px;
+  margin: 5px 3px;
+  border-radius: 10px;
+}
+#tasklist-24 button:checked {
+  background-color: rgba(255, 121, 198, 0.18);
+  box-shadow: inset 0 -2px #ff79c6;
+}
+#tasklist-24 button:hover {
+  background-color: rgba(189, 147, 249, 0.15);
+}
+#tasklist-24 button label {
+  padding-left: 4px;
+}
+
+/* Kawaii start menu (Whisker) */
+#whiskermenu-window {
+  background-color: #1a0f29;
+  border: 2px solid rgba(255, 121, 198, 0.6);
+}
+#whiskermenu-window entry {
+  border-radius: 14px;
+  padding: 6px 12px;
+  background-color: #2b1b3d;
+  border: 1px solid rgba(189, 147, 249, 0.5);
+  color: #f5ecff;
+}
+#whiskermenu-window entry:focus {
+  border-color: #ff79c6;
+}
+#whiskermenu-window treeview,
+#whiskermenu-window iconview,
+#whiskermenu-window scrolledwindow {
+  background-color: transparent;
+}
+#whiskermenu-window treeview:selected,
+#whiskermenu-window iconview:selected,
+#whiskermenu-window treeview:hover {
+  background-color: rgba(255, 121, 198, 0.25);
+  color: #ffffff;
+  border-radius: 10px;
+}
+#whiskermenu-window button {
+  border-radius: 10px;
+  padding: 4px 10px;
+}
+#whiskermenu-window button:checked,
+#whiskermenu-window button:hover {
+  background-color: rgba(189, 147, 249, 0.22);
+  box-shadow: inset 3px 0 #ff79c6;
+}
+#whiskermenu-window label {
+  font-family: "Quicksand";
+}
+#whiskermenu-button {
+  padding: 0 10px;
+}

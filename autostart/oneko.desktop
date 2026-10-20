@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=oneko
+Comment=Котик бегает за курсором
+Exec=/usr/games/oneko -tora -fg "#2b1b3d" -bg "#ffd6ec"
+OnlyShowIn=XFCE;
