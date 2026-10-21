@@ -8,7 +8,7 @@ gi.require_version('PangoCairo', '1.0')
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, Pango, PangoCairo
 
-W, H = 380, 470
+W, H = 380, 640
 X, Y = 60, 90          # position on screen
 FONT = 'Quicksand'
 NAME = os.environ.get('KAWAII_NAME') or os.environ.get('USER', 'nya').capitalize()
@@ -89,6 +89,80 @@ def find_cpu_temp():
 TEMP_FILE = find_cpu_temp()
 
 
+# Friendly app names for the "who eats" list: process name -> label.
+APP_NAMES = {
+    'claude-desktop': 'Claude', 'claude': 'Claude Code', 'chrome': 'Chrome',
+    'code': 'VS Code', 'Xorg': 'Экран (Xorg)', 'X0tigervnc': 'VNC', 'x11vnc': 'VNC',
+    'xrdp': 'RDP', 'wrapper-2.0': 'Панель', 'xfce4-panel': 'Панель',
+    'AmneziaVPN': 'AmneziaVPN', 'AmneziaVPN-serv': 'AmneziaVPN', 'amneziawg-go': 'AmneziaVPN',
+    'dockerd': 'Docker', 'containerd': 'Docker', 'thunar': 'Файлы', 'xfdesktop': 'Рабочий стол',
+    'xfce4-terminal': 'Терминал', 'firefox-esr': 'Firefox', 'Isolated Web Co': 'Firefox',
+    'go': 'Go', 'compile': 'Go', 'eslint': 'ESLint',
+}
+NODE_HINTS = (('svelte', 'MCP Svelte'), ('figma', 'MCP Figma'), ('eslint', 'ESLint'),
+              ('vitest', 'Vitest'), ('tsc', 'TypeScript'), ('vite', 'Vite'))
+
+
+class Procs:
+    """Per-app CPU (% of the whole machine) and RAM, grouped by friendly name."""
+    def __init__(self):
+        self.prev = {}        # pid -> cpu ticks
+        self.labels = {}      # pid -> label (cmdline is read once per pid)
+        self.prev_total = None
+        self.ncpu = os.cpu_count() or 1
+        self.page = os.sysconf('SC_PAGE_SIZE')
+        self.top_cpu, self.top_mem = [], []
+
+    def label(self, pid, comm):
+        lab = self.labels.get(pid)
+        if lab is None:
+            lab = APP_NAMES.get(comm)
+            if lab is None and comm in ('node', 'MainThread', 'npm', 'npm exec', 'python3', 'python'):
+                try:
+                    cmd = open(f'/proc/{pid}/cmdline', 'rb').read().replace(b'\0', b' ').decode(errors='ignore')
+                except OSError:
+                    cmd = ''
+                if 'kawaii-widget' in cmd:
+                    lab = 'виджет ♡'
+                else:
+                    lab = next((n for h, n in NODE_HINTS if h in cmd), 'Node' if 'node' in cmd or 'npm' in cmd else comm)
+            self.labels[pid] = lab = lab or comm
+        return lab
+
+    def update(self):
+        total = sum(map(int, open('/proc/stat').readline().split()[1:8]))
+        dt = (total - self.prev_total) if self.prev_total else 0
+        self.prev_total = total
+        cpu, mem, seen = {}, {}, {}
+        for d in os.listdir('/proc'):
+            if not d.isdigit():
+                continue
+            pid = int(d)
+            try:
+                raw = open(f'/proc/{d}/stat').read()
+                rss = int(open(f'/proc/{d}/statm').read().split()[1]) * self.page
+            except OSError:
+                continue
+            comm = raw[raw.index('(') + 1:raw.rindex(')')]
+            f = raw[raw.rindex(')') + 2:].split()
+            ticks = int(f[11]) + int(f[12])
+            seen[pid] = ticks
+            if rss == 0:
+                continue          # kernel threads
+            lab = self.label(pid, comm)
+            mem[lab] = mem.get(lab, 0) + rss
+            if dt and pid in self.prev:
+                cpu[lab] = cpu.get(lab, 0) + 100 * (ticks - self.prev[pid]) / dt
+        self.prev = seen
+        self.labels = {p: l for p, l in self.labels.items() if p in seen}
+        self.top_cpu = sorted(cpu.items(), key=lambda kv: -kv[1])[:4]
+        self.top_mem = sorted(mem.items(), key=lambda kv: -kv[1])[:4]
+
+
+def gib(b):
+    return f'{b / 2**30:.1f} ГБ' if b >= 2**30 else f'{b / 2**20:.0f} МБ'
+
+
 def human(bps):
     for unit in ('B', 'K', 'M', 'G'):
         if bps < 1024:
@@ -156,6 +230,7 @@ class Widget(Gtk.Window):
         self.set_default_size(W, H)
         self.move(X, Y)
         self.stats = Stats()
+        self.procs = Procs()
         self.blink = 0
         self.connect('draw', self.on_draw)
         self.connect('destroy', Gtk.main_quit)
@@ -164,6 +239,7 @@ class Widget(Gtk.Window):
 
     def tick(self):
         self.stats.update()
+        self.procs.update()
         self.blink = (self.blink + 1) % 6
         self.ticks = getattr(self, 'ticks', 0) + 1
         if self.wall is not None and self.ticks % 30 == 0:   # wallpaper changed?
@@ -286,7 +362,39 @@ class Widget(Gtk.Window):
         self.text(cr, f'↓ {human(s.down)}', x, y, 10, SKY, weight='Medium')
         self.text(cr, f'↑ {human(s.up)}', W / 2, y, 10, PINK, weight='Medium', align='center')
         self.text(cr, f'⏱ {uptime()}', x + w, y, 10, LAV, weight='Medium', align='right')
+
+        # who eats the most
+        y += 34
+        cr.set_source_rgba(*PINK, 0.25); cr.set_line_width(1)
+        cr.move_to(x, y - 10); cr.line_to(x + w, y - 10); cr.stroke()
+        self.text(cr, 'кто ест больше всех ♡', W / 2, y, 11, PINK, align='center')
+        y += 28
+        col = (w - 16) / 2
+        self.top_list(cr, x, y, col, '♡ процессор', PINK,
+                      [(n, v, f'{v:.0f}%') for n, v in self.procs.top_cpu],
+                      max([25] + [v for _, v in self.procs.top_cpu]))
+        mem_total = self.mem_total
+        self.top_list(cr, x + col + 16, y, col, '✿ память', LAV,
+                      [(n, v, gib(v)) for n, v in self.procs.top_mem], mem_total)
         return False
+
+    @property
+    def mem_total(self):
+        if not hasattr(self, '_mem_total'):
+            self._mem_total = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+        return self._mem_total
+
+    def top_list(self, cr, x, y, w, title, color, rows, full):
+        self.text(cr, title, x, y, 10, color)
+        y += 22
+        for name, val, shown in rows:
+            name = name if len(name) <= 13 else name[:12] + '…'
+            self.text(cr, name, x, y, 9, CREAM, weight='Medium', alpha=0.9)
+            self.text(cr, shown, x + w, y, 9, color, weight='Bold', align='right')
+            rrect(cr, x, y + 17, w, 4, 2); cr.set_source_rgba(1, 1, 1, 0.07); cr.fill()
+            fw = max(4, w * min(val / full, 1)) if full else 4
+            rrect(cr, x, y + 17, fw, 4, 2); cr.set_source_rgba(*color, 0.8); cr.fill()
+            y += 28
 
 
 if __name__ == '__main__':
