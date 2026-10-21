@@ -3,7 +3,7 @@
 #
 #   ./install.sh            theme, fonts, wallpaper, widget, terminal, menu styles
 #   ./install.sh --panel    also rebuild the top panel (replaces your current one!)
-#   ./install.sh --keys     also add Windows-like shortcuts and us,ru on Ctrl+Space
+#   ./install.sh --keys     also add Windows-like shortcuts and us,ru on Ctrl+Space / Win+Space / Alt+Shift
 #   ./install.sh --vnc      also autostart the LAN-only VNC server
 #
 # Everything it overwrites is backed up to ~/.config/kawaii-backup/<date>/.
@@ -97,8 +97,8 @@ done
 command -v oneko >/dev/null || command -v /usr/games/oneko >/dev/null || rm -f ~/.config/autostart/oneko.desktop
 
 if [ $WANT_KEYS = 1 ]; then
-  say "Windows-like shortcuts, us,ru on Ctrl+Space"
-  install -m 755 scripts/kawaii-xkb-guard.sh "$BIN/"
+  say "Windows-like shortcuts, us,ru on Ctrl+Space / Win+Space / Alt+Shift"
+  install -m 755 scripts/kawaii-xkb-guard.sh scripts/kawaii-next-layout.py "$BIN/"
   C=xfce4-keyboard-shortcuts
   xq $C /commands/custom/Super_L string xfce4-popup-whiskermenu
   xq $C '/commands/custom/<Super>e' string thunar
@@ -115,7 +115,8 @@ if [ $WANT_KEYS = 1 ]; then
   xq $C '/xfwm4/custom/<Super>Right' string tile_right_key
   xq $C '/xfwm4/custom/<Super>Tab' string cycle_windows_key
   xq keyboard-layout /Default/XkbLayout string us,ru
-  xq keyboard-layout /Default/XkbOptions/Group string grp:ctrl_space_toggle
+  xq $C '/commands/custom/<Super>space' string "$BIN/kawaii-next-layout.py"
+  xq keyboard-layout /Default/XkbOptions/Group string grp:ctrl_space_toggle,grp:alt_shift_toggle
 fi
 
 [ $WANT_VNC = 1 ] && { say "VNC launcher (LAN only)"; install -m 755 scripts/kawaii-vnc.sh "$BIN/"; }

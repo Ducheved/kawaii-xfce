@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
 Name=US/RU Keyboard
-Comment=Держит раскладку us,ru (Ctrl+Space), даже после переподключения по RDP
+Comment=Держит раскладку us,ru (Ctrl+Space / Win+Space / Alt+Shift), даже после переподключения по RDP
 Exec=@BIN@/kawaii-xkb-guard.sh
 OnlyShowIn=XFCE;
