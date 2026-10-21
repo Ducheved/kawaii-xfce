@@ -9,7 +9,7 @@ gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, Pango, PangoCairo
 
 W, H = 380, 640
-X, Y = 60, 90          # position on screen
+X, Y = 140, 90         # position on screen
 FONT = 'Quicksand'
 NAME = os.environ.get('KAWAII_NAME') or os.environ.get('USER', 'nya').capitalize()
 
